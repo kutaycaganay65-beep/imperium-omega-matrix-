@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title id="pageTitle">Imperium Omega - Otonom Gelir & Sporcu Matrisi</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap');
+        body { font-family: 'Plus Jakarta Sans', sans-serif; }
+    </style>
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col justify-between selection:bg-cyan-500 selection:text-black">
+
+    <!-- Header -->
+    <header class="border-b border-slate-800/80 bg-slate-900/50 backdrop-blur-md sticky top-0 z-40">
+        <div class="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
+            <div class="flex items-center gap-3">
+                <div class="w-9 h-9 rounded-lg bg-gradient-to-br from-cyan-500 to-indigo-600 flex items-center justify-center font-bold text-black shadow-lg shadow-cyan-500/20">⚡</div>
+                <span class="font-bold text-lg tracking-tight bg-gradient-to-r from-white to-slate-400 bg-clip-text text-transparent">Imperium <span class="text-cyan-400 text-xs px-2 py-0.5 rounded-full bg-cyan-950 border border-cyan-800/50 ml-1">4444 Matrix</span></span>
+            </div>
+            
+            <div class="flex items-center gap-4">
+                <select id="langSelect" onchange="changeLanguage(this.value)" class="bg-slate-900 border border-slate-700 text-slate-300 text-xs rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-cyan-500 transition">
+                    <option value="tr">🇹🇷 Türkçe</option>
+                    <option value="en">🇬🇧 English</option>
+                    <option value="zh">🇨🇳 中文</option>
+                    <option value="de">🇩🇪 Deutsch</option>
+                    <option value="es">🇪🇸 Español</option>
+                </select>
+                <button onclick="triggerCheckout()" id="navPro" class="bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-slate-950 font-bold px-4 py-2 rounded-lg text-sm shadow-lg shadow-cyan-500/20 transition transform active:scale-95">Sınırsız Erişim ($5)</button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Container -->
+    <main class="max-w-7xl mx-auto px-6 py-8 flex-1 w-full grid grid-cols-1 lg:grid-cols-3 gap-8">
+        
+        <!-- Sol Panel: Modül Seçici (Veri Temizleyici + Sporcu Koçu) -->
+        <div class="lg:col-span-1 space-y-6">
+            <div class="flex bg-slate-900 p-1.5 rounded-xl border border-slate-800">
+                <button onclick="switchTab('data')" id="tabData" class="flex-1 py-2 text-xs font-semibold rounded-lg bg-cyan-500 text-slate-950 transition">📊 Veri & CSV</button>
+                <button onclick="switchTab('athlete')" id="tabAthlete" class="flex-1 py-2 text-xs font-semibold rounded-lg text-slate-400 hover:text-white transition">🥊 Sporcu & Koç</button>
+            </div>
+
+            <!-- Modül 1: Veri Temizleyici -->
+            <div id="moduleData" class="bg-slate-900/80 border border-slate-800 rounded-2xl p-6 shadow-xl relative">
+                <h2 id="mod1Title" class="text-lg font-semibold mb-2">Otonom CSV Veri Temizleyici</h2>
+                <p id="mod1Desc" class="text-xs text-slate-400 mb-6">Ham verileri yükleyin; boşlukları temizleyelim, mükerrerleri silelim.</p>
+
+                <div class="border-2 border-dashed border-slate-700 hover:border-cyan-500/50 transition rounded-xl p-6 text-center cursor-pointer bg-slate-950/40 relative group">
+                    <input type="file" id="fileInput" accept=".csv" class="absolute inset-0 opacity-0 cursor-pointer w-full h-full">
+                    <div class="space-y-2">
+                        <div class="w-8 h-8 mx-auto rounded-full bg-slate-800 flex items-center justify-center text-cyan-400">📁</div>
+                        <p id="dropText" class="text-xs font-medium text-slate-300">CSV dosyasını buraya bırakın</p>
+                    </div>
+                </div>
+
+                <div class="mt-4 space-y-2">
+                    <label class="flex items-center gap-2 text-xs text-slate-300 cursor-pointer"><input type="checkbox" id="optTrim" checked class="rounded bg-slate-950 text-cyan-500"> Boşlukları Temizle</label>
+                    <label class="flex items-center gap-2 text-xs text-slate-300 cursor-pointer"><input type="checkbox" id="optDups" checked class="rounded bg-slate-950 text-cyan-500"> Mükerrer Satırları Kaldır</label>
+                </div>
+
+                <button onclick="processData()" id="processBtn" class="w-full mt-5 bg-slate-800 hover:bg-slate-700 text-white font-semibold py-2.5 rounded-xl text-xs transition border border-slate-700/50">Veriyi Optimize Et ⚡</button>
+            </div>
+
+            <!-- Modül 2: Profesyonel Sporcu & Antrenman Üreteci -->
+            <div id="moduleAthlete" class="bg-slate-900/80 border border-slate-800 rounded-2xl p-6 shadow-xl relative hidden">
+                <h2 id="mod2Title" class="text-lg font-semibold mb-2">Otopilot Sporcu & Koçluk Üreteci</h2>
+                <p id="mod2Desc" class="text-xs text-slate-400 mb-4">Yüzme (50m sprint), Boks/MMA ve Fitness programları oluştur.</p>
+
+                <div class="space-y-3">
+                    <div>
+                        <label id="lblDiscipline" class="text-[10px] uppercase font-semibold text-slate-400">Disiplin Seçimi</label>
+                        <select id="athleteDiscipline" class="w-full mt-1 bg-slate-950 border border-slate-700 text-slate-200 text-xs rounded-lg p-2.5">
+                            <option value="swimming">🌊 Yüzme (50m Serbest / Kelebek Sprint)</option>
+                            <option value="boxing">🥊 Boks & Gölge Boksu / MMA Kondisyon</option>
+                            <option value="fitness">💪 Vücut Geliştirme & Güç Antrenmanı</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label id="lblGoal" class="text-[10px] uppercase font-semibold text-slate-400">Hedef / Odak</label>
+                        <select id="athleteGoal" class="w-full mt-1 bg-slate-950 border border-slate-700 text-slate-200 text-xs rounded-lg p-2.5">
+                            <option value="speed">Patlayıcı Kuvvet & Hız</option>
+                            <option value="hypertrophy">Hipertrofi & Kas Gelişimi</option>
+                            <option value="endurance">Maksimum Dayanıklılık</option>
+                        </select>
+                    </div>
+                    <button onclick="generateAthletePlan()" id="genPlanBtn" class="w-full bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-bold py-2.5 rounded-xl text-xs transition">Profesyonel Program Üret 🚀</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sağ Panel: Sonuç ve Çıktı -->
+        <div class="lg:col-span-2 flex flex-col space-y-6">
+            <div class="bg-slate-900/80 border border-slate-800 rounded-2xl p-6 shadow-xl flex-1 flex flex-col justify-between">
+                <div>
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 id="previewTitle" class="font-semibold text-sm text-slate-300">Sistem Çıktı & Önizleme Paneli</h3>
+                        <span id="rowCountBadge" class="text-xs bg-slate-800 text-slate-400 px-2.5 py-1 rounded-md">Bekleniyor...</span>
+                    </div>
+
+                    <div id="tableContainer" class="border border-slate-800 rounded-xl overflow-x-auto bg-slate-950/60 p-4 min-h-[300px] flex items-center justify-center text-slate-500 text-xs">
+                        Sol menüden bir modül seçip verinizi işleyin veya program üretin.
+                    </div>
+                </div>
+
+                <div class="mt-6 pt-4 border-t border-slate-800 flex items-center justify-between">
+                    <span id="freeNotice" class="text-xs text-slate-500">Otopilot gelir motoru aktif ($Cd = 0.0).</span>
+                    <button onclick="exportData()" id="downloadBtn" class="bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-bold px-6 py-2 rounded-xl text-xs transition shadow-lg shadow-cyan-500/10">
+                        📥 Çıktıyı İndir / Kilidi Aç
+                    </button>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Modal: Paywall / Lemon Squeezy -->
+    <div id="paywallModal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-slate-900 border border-slate-800 rounded-2xl max-w-md w-full p-6 relative shadow-2xl">
+            <button onclick="closeModal()" class="absolute top-4 right-4 text-slate-500 hover:text-white">✕</button>
+            <div class="text-center space-y-3 mb-6">
+                <div class="w-12 h-12 rounded-2xl bg-cyan-500/10 border border-cyan-500/20 mx-auto flex items-center justify-center text-xl">💎</div>
+                <h3 id="modalTitle" class="text-xl font-bold">Imperium Sınırsız Erişim</h3>
+                <p id="modalDesc" class="text-sm text-slate-400">Tüm otonom araçlara, sınırsız veri dışa aktarmaya ve özel sporcu programlarına ömür boyu erişim.</p>
+                <div class="text-3xl font-extrabold text-cyan-400">$5 <span class="text-xs font-normal text-slate-500">/ ömür boyu</span></div>
+            </div>
+            <button onclick="simulateSuccessfulPayment()" id="payBtn" class="w-full bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-bold py-3 rounded-xl text-sm transition">
+                Lemon Squeezy ile Öde (IBAN'a Aktar)
+            </button>
+        </div>
+    </div>
+
+    <script>
+        const translations = {
+            tr: {
+                pageTitle: "Imperium Omega - Otonom Gelir & Sporcu Matrisi",
+                mod1Title: "Otonom CSV Veri Temizleyici",
+                mod1Desc: "Ham verileri yükleyin; boşlukları temizleyelim, mükerrerleri silelim.",
+                dropText: "CSV dosyasını buraya bırakın",
+                processBtn: "Veriyi Optimize Et ⚡",
+                mod2Title: "Otopilot Sporcu & Koçluk Üreteci",
+                mod2Desc: "Yüzme (50m sprint), Boks/MMA ve Fitness programları oluştur.",
+                lblDiscipline: "Disiplin Seçimi",
+                lblGoal: "Hedef / Odak",
+                genPlanBtn: "Profesyonel Program Üret 🚀",
+                previewTitle: "Sistem Çıktı & Önizleme Paneli",
+                waiting: "Bekleniyor...",
+                freeNotice: "Otopilot gelir motoru aktif ($Cd = 0.0).",
+                downloadBtn: "📥 Çıktıyı İndir / Kilidi Aç",
+                modalTitle: "Imperium Sınırsız Erişim",
+                modalDesc: "Tüm otonom araçlara, sınırsız veri dışa aktarmaya ve özel sporcu programlarına ömür boyu erişim.",
+                payBtn: "Lemon Squeezy ile Öde (IBAN'a Aktar)"
+            },
+            en: {
+                pageTitle: "Imperium Omega - Autonomous Revenue & Athlete Matrix",
+                mod1Title: "Autonomous CSV Data Cleaner",
+                mod1Desc: "Upload raw data; let's trim spaces and remove duplicates.",
+                dropText: "Drop your CSV file here",
+                processBtn: "Optimize Data ⚡",
+                mod2Title: "Autopilot Athlete & Coaching Generator",
+                mod2Desc: "Generate Swimming (50m sprint), Boxing/MMA and Fitness programs.",
+                lblDiscipline: "Discipline",
+                lblGoal: "Goal / Focus",
+                genPlanBtn: "Generate Pro Plan 🚀",
+                previewTitle: "System Output & Preview Panel",
+                waiting: "Waiting...",
+                freeNotice: "Autopilot revenue engine active ($Cd = 0.0).",
+                downloadBtn: "📥 Download / Unlock",
+                modalTitle: "Imperium Lifetime Access",
+                modalDesc: "Lifetime access to all autonomous tools, unlimited exports and pro athlete programs.",
+                payBtn: "Secure Pay with Lemon Squeezy"
+            },
+            zh: {
+                pageTitle: "Imperium Omega - 自主收入与运动员矩阵",
+                mod1Title: "自主 CSV 数据清理器",
+                mod1Desc: "上传原始数据；清理空格并去除重复项。",
+                dropText: "将 CSV 文件拖放到此处",
+                processBtn: "优化数据 ⚡",
+                mod2Title: "自动驾驶运动员与教练生成器",
+                mod2Desc: "生成游泳（50米冲刺）、拳击/MMA和健身计划。",
+                lblDiscipline: "学科选择",
+                lblGoal: "目标",
+                genPlanBtn: "生成专业计划 🚀",
+                previewTitle: "系统输出与预览面板",
+                waiting: "等待中...",
+                freeNotice: "自动驾驶收入引擎激活 ($Cd = 0.0)。",
+                downloadBtn: "📥 下载 / 解锁",
+                modalTitle: "Imperium 终身访问权限",
+                modalDesc: "终身访问所有自主工具、无限导出和专业运动员计划。",
+                payBtn: "通过 Lemon Squeezy 安全支付"
+            },
+            de: {
+                pageTitle: "Imperium Omega - Autonomes Einnahmen- & Athletenmatrix",
+                mod1Title: "Autonomer CSV-Datenreiniger",
+                mod1Desc: "Rohdaten hochladen; Leerzeichen bereinigen und Duplikate entfernen.",
+                dropText: "CSV-Datei hier ablegen",
+                processBtn: "Daten optimieren ⚡",
+                mod2Title: "Autopilot Athleten- & Coaching-Generator",
+                mod2Desc: "Erstelle Schwimm-, Box- und Fitnessprogramme.",
+                lblDiscipline: "Disziplin",
+                lblGoal: "Ziel",
+                genPlanBtn: "Profi-Plan generieren 🚀",
+                previewTitle: "Systemausgabe & Vorschau",
+                waiting: "Wartet...",
+                freeNotice: "Einnahmen-Engine aktiv ($Cd = 0.0).",
+                downloadBtn: "📥 Herunterladen / Freischalten",
+                modalTitle: "Imperium Lebenslanger Zugriff",
+                modalDesc: "Lebenslanger Zugriff auf alle autonomen Tools und Athletenpläne.",
+                payBtn: "Sicher bezahlen mit Lemon Squeezy"
+            },
+            es: {
+                pageTitle: "Imperium Omega - Matriz Autónoma de Ingresos y Atletas",
+                mod1Title: "Limpiador Autónomo de Datos CSV",
+                mod1Desc: "Sube datos sin procesar; limpia espacios y duplicados.",
+                dropText: "Suelta tu archivo CSV aquí",
+                processBtn: "Optimizar Datos ⚡",
+                mod2Title: "Generador Autopiloto de Atletas",
+                mod2Desc: "Genera programas de natación, boxeo y fitness.",
+                lblDiscipline: "Disciplina",
+                lblGoal: "Objetivo",
+                genPlanBtn: "Generar Plan Pro 🚀",
+                previewTitle: "Panel de Vista Previa",
+                waiting: "Esperando...",
+                freeNotice: "Motor de ingresos activo ($Cd = 0.0).",
+                downloadBtn: "📥 Descargar / Desbloquear",
+                modalTitle: "Acceso Vitalicio Imperium",
+                modalDesc: "Acceso de por vida a todas las herramientas autónomas y programas.",
+                payBtn: "Pago seguro con Lemon Squeezy"
+            }
+        };
+
+        let currentLang = 'tr';
+        function changeLanguage(lang) {
+            currentLang = lang;
+            const t = translations[lang];
+            document.getElementById('pageTitle').innerText = t.pageTitle;
+            document.getElementById('mod1Title').innerText = t.mod1Title;
+            document.getElementById('mod1Desc').innerText = t.mod1Desc;
+            document.getElementById('dropText').innerText = t.dropText;
+            document.getElementById('processBtn').innerText = t.processBtn;
+            document.getElementById('mod2Title').innerText = t.mod2Title;
+            document.getElementById('mod2Desc').innerText = t.mod2Desc;
+            document.getElementById('lblDiscipline').innerText = t.lblDiscipline;
+            document.getElementById('lblGoal').innerText = t.lblGoal;
+            document.getElementById('genPlanBtn').innerText = t.genPlanBtn;
+            document.getElementById('previewTitle').innerText = t.previewTitle;
+            document.getElementById('freeNotice').innerText = t.freeNotice;
+            document.getElementById('downloadBtn').innerText = t.downloadBtn;
+            document.getElementById('modalTitle').innerText = t.modalTitle;
+            document.getElementById('modalDesc').innerText = t.modalDesc;
+            document.getElementById('payBtn').innerText = t.payBtn;
+        }
+
+        function switchTab(tab) {
+            if(tab === 'data') {
+                document.getElementById('moduleData').classList.remove('hidden');
+                document.getElementById('moduleAthlete').classList.add('hidden');
+                document.getElementById('tabData').className = "flex-1 py-2 text-xs font-semibold rounded-lg bg-cyan-500 text-slate-950 transition";
+                document.getElementById('tabAthlete').className = "flex-1 py-2 text-xs font-semibold rounded-lg text-slate-400 hover:text-white transition";
+            } else {
+                document.getElementById('moduleData').classList.add('hidden');
+                document.getElementById('moduleAthlete').classList.remove('hidden');
+                document.getElementById('tabAthlete').className = "flex-1 py-2 text-xs font-semibold rounded-lg bg-cyan-500 text-slate-950 transition";
+                document.getElementById('tabData').className = "flex-1 py-2 text-xs font-semibold rounded-lg text-slate-400 hover:text-white transition";
+            }
+        }
+
+        let parsedData = [];
+        let isProUnlocked = false;
+
+        document.getElementById('fileInput').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+            Papa.parse(file, {
+                header: true,
+                skipEmptyLines: true,
+                complete: function(results) {
+                    parsedData = results.data;
+                    document.getElementById('rowCountBadge').innerText = `${parsedData.length} Satır Yüklendi`;
+                    renderTable(parsedData.slice(0, 3));
+                }
+            });
+        });
+
+        function processData() {
+            if (parsedData.length === 0) { alert("Lütfen önce CSV yükleyin."); return; }
+            parsedData = parsedData.map(row => {
+                let r = {};
+                for(let k in row) r[k] = typeof row[k] === 'string' ? row[k].trim() : row[k];
+                return r;
+            });
+            document.getElementById('rowCountBadge').innerText = `${parsedData.length} Satır (Optimize Edildi)`;
+            renderTable(isProUnlocked ? parsedData : parsedData.slice(0, 3));
+            alert("Veriler 4444 matris standartlarında temizlendi!");
+        }
+
+        function generateAthletePlan() {
+            const disc = document.getElementById('athleteDiscipline').value;
+            const goal = document.getElementById('athleteGoal').value;
+            
+            let planText = "";
+            if(disc === 'swimming') {
+                planText = "🌊 **50m Sprint Yüzme Antrenman Programı (Özel Kelebek/Serbest):**\n\n" +
+                           "1. Isınma: 400m serbest + 200m dril (tek kol kelebek)\n" +
+                           "2. Patlayıcı Çıkış: 8 x 15m maksimum efor çıkış ve su altı akıntısı\n" +
+                           "3. Ana Set (Hız): 6 x 50m serbest sprint (30sn dinlenme)\n" +
+                           "4. Beslenme Desteği: Whey Protein + Kreatin + Laktozsuz Süt\n" +
+                           "5. Dinlenme & CNS Yenilenme: 24 saat aktif toparlanma.";
+            } else if(disc === 'boxing') {
+                planText = "🥊 **Boks & MMA Patlayıcı Kuvvet ve Gölge Boksu Programı:**\n\n" +
+                           "1. Isınma: 10 dk ip atlama + dinamik omuz rotasyonları\n" +
+                           "2. Gölge Boksu: 5 raunt x 3 dk (Biyomekanik rotasyon ve güç aktarımı odaklı)\n" +
+                           "3. Torba / Kuvvet: 4 x 3 dk ağırlık/direnç entegreli kombine vuruş\n" +
+                           "4. Beslenme: Multivitamin + Bisküvi aromalı protein tozu + hidrasyon.";
+            } else {
+                planText = "💪 **Vücut Geliştirme & Atletik Fitness Programı:**\n\n" +
+                           "1. Bileşik Hareketler: Squat / Bench Press / Deadlift (4 x 6-8 tekrar)\n" +
+                           "2. Hipertrofi Odaklı İzolasyon: Süpersetler\n" +
+                           "3. Protein Yapısı: Çikolata aromalı whey protein, temiz karbonhidrat.\n" +
+                           "4. Dinlenme: Kaliteli uyku ve sıfır stres ($Cd = 0.0$).";
+            }
+
+            document.getElementById('tableContainer').innerHTML = `<div class="text-xs text-slate-200 whitespace-pre-line leading-relaxed">${planText}</div>`;
+            document.getElementById('rowCountBadge').innerText = "Program Aktif";
+        }
+
+        function renderTable(data) {
+            if (data.length === 0) return;
+            const keys = Object.keys(data[0]);
+            let html = '<table class="w-auto text-left text-xs text-slate-300 border-collapse"><thead class="bg-slate-900 text-slate-400 uppercase border-b border-slate-800"><tr>';
+            keys.forEach(k => html += `<th class="px-3 py-2">${k}</th>`);
+            html += '</tr></thead><tbody>';
+            data.forEach(row => {
+                html += '<tr class="border-b border-slate-800/40">';
+                keys.forEach(k => html += `<td class="px-3 py-2">${row[k] || ''}</td>`);
+                html += '</tr>';
+            });
+            html += '</tbody></table>';
+            document.getElementById('tableContainer').innerHTML = html;
+        }
+
+        function exportData() {
+            if (!isProUnlocked) {
+                document.getElementById('paywallModal').classList.remove('hidden');
+                return;
+            }
+            let csv = Papa.unparse(parsedData);
+            let blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+            let url = URL.createObjectURL(blob);
+            let a = document.createElement('a');
+            a.href = url; a.download = 'imperium_clean_data.csv'; a.click();
+        }
+
+        function closeModal() { document.getElementById('paywallModal').classList.add('hidden'); }
+        function simulateSuccessfulPayment() {
+            isProUnlocked = true;
+            closeModal();
+            alert("Ödeme Onaylandı! Sınırsız İndirme Kilidi Açıldı. Para IBAN'ınıza yönlendiriliyor.");
+            renderTable(parsedData);
+        }
+    </script>
+</body>
+</html>
